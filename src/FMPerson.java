@@ -14,7 +14,7 @@ public class FMPerson {
         pswd = newPswd;
         numberId = newNumberId;
         phoneNumber = newPhoneNumber;
-        gender = newGender;
+        gender = newGender.equals("0") ? "0" : "1";
         birthDate = newBirthDate;
         money = 2000;
     }
@@ -73,7 +73,7 @@ public class FMPerson {
     }
 
     public void setGender(String gender) {
-        this.gender = gender;
+        this.gender = gender.equals("0")  ? "0" : "1";
     }
 
     public void setId(String id) {

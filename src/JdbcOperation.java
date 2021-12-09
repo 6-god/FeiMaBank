@@ -32,11 +32,17 @@ public class JdbcOperation {
         return true;
     }
 
-    public void insertNewUser(ArrayList<FMPerson> fmPersonArrayList) throws SQLException {  //new User || import from excel
+    public int insertNewUser(ArrayList<FMPerson> fmPersonArrayList)  {  //new User || import from excel
         int total = fmPersonArrayList.size();
         String sql = "INSERT INTO "+tableName +" (username,pswd,number_id,phone_number,gender,birth_date,money) values (?,?,?,?,?,?,?)";
-        PreparedStatement ps;
-        ps = (PreparedStatement) connection.prepareStatement(sql);
+        PreparedStatement ps = null;
+        try{
+            ps = (PreparedStatement) connection.prepareStatement(sql);
+        }catch (SQLException e){
+            e.printStackTrace();
+            return -1;
+        }
+
         for(int i = 0 ; i<total;i++){
             try{
                 FMPerson personToAdd = fmPersonArrayList.get(i);
@@ -54,12 +60,24 @@ public class JdbcOperation {
                 ps.executeUpdate();
                 ps.close();
 
+
             } catch (SQLException sqlException){
                 sqlException.printStackTrace();
+                return -1;
             }
 
 
+
         }
+        return 0;
+    }
+
+
+
+    public int insertNewUser(FMPerson FMPerson1)  {
+        ArrayList<FMPerson> personArrayList = new ArrayList<FMPerson>();
+        personArrayList.add(FMPerson1);
+        return this.insertNewUser(personArrayList);
     }
 
     public void deleteUserFromDatabase(String idToDelete){  //delete User
@@ -101,6 +119,59 @@ public class JdbcOperation {
             tmpPerson.printOnePerson();
         }
         return tmpPerson;   //if query failed ,return null
+    }
+
+    public String loginByUserName(String userName,String passWord){
+        String userId = null;
+        FMPerson tmpPerson = null;
+        String sql = "SELECT * FROM " + tableName + " WHERE username= "+ userName;
+        PreparedStatement pS;
+        ResultSet rS;
+        try{
+            pS = (PreparedStatement) connection.prepareStatement(sql);
+            rS = pS.executeQuery();
+            pS.close();
+            tmpPerson = new FMPerson();
+            while(rS.next()){
+                tmpPerson.setId(rS.getString("id"));
+                tmpPerson.setUserName(rS.getString("username"));
+                tmpPerson.setPswd(rS.getString("pswd"));
+                tmpPerson.setNumberId(rS.getString("number_id"));
+                tmpPerson.setPhoneNumber(rS.getString("phone_number"));
+                tmpPerson.setGender(rS.getString("gender"));
+                tmpPerson.setBirthDate(rS.getDate("birth_date"));
+                tmpPerson.setMoney(rS.getDouble("money"));
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        if(tmpPerson!=null){
+            tmpPerson.printOnePerson();
+        }
+
+        if(tmpPerson.getPswd() == passWord){
+            userId = tmpPerson.getId();
+        }
+        return  userId;
+    }
+
+    boolean judgeUserNameWhetherExist(String userName){
+        String sql = "SELECT username FROM " + tableName + " WHERE username= "+ userName;
+        PreparedStatement pS;
+        ResultSet rS;
+        String result = null;
+        try{
+            pS = (PreparedStatement) connection.prepareStatement(sql);
+            rS = pS.executeQuery();
+            pS.close();
+            result = rS.getString("username");
+            if(result != null){
+                return true;
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return false;           //false means that username has not existed yet
     }
 
     int updateOnePerson(String personId,String userName,String password,String phoneNumber,String gender,Date birthDate){
@@ -177,6 +248,7 @@ public class JdbcOperation {
     public String getLoginId() {
         return loginId;
     }
+
 
     /**
      public Connection getConnection() {
