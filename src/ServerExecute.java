@@ -71,7 +71,7 @@ public class ServerExecute {
 
     void personalHomepage(String userId) {  //send the whole person class back using socket, in this method
         FMPerson homepagePerson = jdbcOperation.searchFromDatabase(userId);
-        try{
+        try {
             ServerSocket homepageSocket = new ServerSocket(10004);
             Socket socket = homepageSocket.accept();
             DataOutputStream homepageDOS = new DataOutputStream(socket.getOutputStream());
@@ -79,33 +79,110 @@ public class ServerExecute {
             homepageOOS.writeObject(homepagePerson);
             homepageOOS.flush();
             homepageOOS.close();
-        }catch (IOException ioException){
+        } catch (IOException ioException) {
             ioException.printStackTrace();
         }
 
     }
 
-    void changeMoney() {
+    String changeMoney(String changeId) {
         Double changeAmount = 0.0;
-        try{    //get the 
+        try {    //get the
             ServerSocket moneySocket = new ServerSocket(10005);
             Socket socket = moneySocket.accept();
             DataInputStream moneyChangeDIS = new DataInputStream(socket.getInputStream());
             changeAmount = moneyChangeDIS.readDouble();
             moneyChangeDIS.close();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
+        }
+        FMPerson tmpPerson = jdbcOperation.searchFromDatabase(changeId);
+        Double now = tmpPerson.getMoney();
+        if (now + changeAmount < 0.0) {
+            return "money not enough\n";
+        }
+        tmpPerson.setMoney(now + changeAmount);
+//        jdbcOperation.updateOnePerson(changeId,tmpPerson.getUserName(),tmpPerson.getPswd(),tmpPerson.getPhoneNumber(),tmpPerson.getGender(),tmpPerson.getBirthDate());
+        jdbcOperation.updateOnePerson(tmpPerson);
+        return "succeed\n";
+
+    }
+
+    String transferAccount(String fromId) {     //the socket transport toId firstly, then transport amount
+        String toId = null;
+        Double transferAmount = 0.0;
+        int flag = 0;
+        try {
+            ServerSocket transferSocket = new ServerSocket(10006);
+            Socket socket = transferSocket.accept();
+            BufferedReader transferBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            toId = transferBufferedReader.readLine();
+            transferAmount = Double.valueOf(transferBufferedReader.readLine());
+            FMPerson fromPerson = jdbcOperation.searchFromDatabase(fromId);
+            FMPerson toPerson = jdbcOperation.searchFromDatabase(toId);
+            transferAmount = Math.abs(transferAmount);
+            if (toPerson == null) {
+                return "person not found";
+            }
+            if (fromPerson.getMoney() + transferAmount < 0.0) {
+                return "money not enough";
+            }
+            fromPerson.setMoney(fromPerson.getMoney() - transferAmount);
+            toPerson.setMoney(toPerson.getMoney() + transferAmount);
+            jdbcOperation.updateOnePerson(fromPerson);
+            jdbcOperation.updateOnePerson(toPerson);
+            return "succeed";
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "other error";
+    }
+
+    String changePersonalInformation(String userId) {//socket will transport which column to change firstly, then the columnValue
+        String returnValue = null;
+        String changeColumn;
+        String changeValueString = null;
+        FMPerson personToBeChanged = jdbcOperation.searchFromDatabase(userId);
+        try {
+            ServerSocket changeInformationSocket = new ServerSocket(10008);
+            Socket socket = changeInformationSocket.accept();
+            BufferedReader changeInformationBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            changeColumn = changeInformationBufferedReader.readLine();
+            if (!changeColumn.equals("birth_date")) { //when the received data is string
+                changeValueString = changeInformationBufferedReader.readLine();
+                changeInformationBufferedReader.close();
+            }
+            if (changeColumn.equals("username")) {
+                personToBeChanged.setUserName(changeValueString);
+            } else if (changeColumn.equals("pswd")) {
+                personToBeChanged.setPswd(changeValueString);
+            } else if (changeColumn.equals("phone_number")) {
+                personToBeChanged.setPhoneNumber(changeValueString);
+            } else if (changeColumn.equals("gender")) {
+                personToBeChanged.setGender(changeValueString);
+            } else if (changeColumn.equals("birth_date")) {
+                Date newDate = null;
+                DataInputStream dateDIS = new DataInputStream(socket.getInputStream());
+                ObjectInputStream dateOIS = new ObjectInputStream(dateDIS);
+                newDate = (Date) dateOIS.readObject();
+                personToBeChanged.setBirthDate(newDate);
+            } else {
+                returnValue = "failed";
+            }
+
+            if (jdbcOperation.updateOnePerson(personToBeChanged) == 0) {
+                returnValue = "succeed";
+            } else {
+                returnValue = "failed";
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            returnValue = "failed";
         }
 
 
-    }
-
-    void transferAccount() {
-
-    }
-
-    void changePersonalInformation() {
-
+        return returnValue;
     }
 
     void rootAccount() {

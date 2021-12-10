@@ -174,8 +174,31 @@ public class JdbcOperation {
         return false;           //false means that username has not existed yet
     }
 
+    int updateOnePerson(FMPerson updatePerson){     //method reload and allows it change multiply arguments at the same time
+
+        FMPerson originalPerson = searchFromDatabase(updatePerson.getId());
+        int returnValue = -1;
+        if(!updatePerson.getUserName().equals(originalPerson.getUserName())){
+            returnValue = updateOnePerson(updatePerson.getId(),updatePerson.getUserName(),null,null,null,null);
+        }
+        if(!updatePerson.getPswd().equals(originalPerson.getPswd())){
+            returnValue = updateOnePerson(updatePerson.getId(),null,updatePerson.getPswd(),null,null,null);
+        }
+        if(!updatePerson.getPhoneNumber().equals(originalPerson.getPhoneNumber())){
+            returnValue = updateOnePerson(updatePerson.getId(),null,null,updatePerson.getPhoneNumber(),null,null);
+        }
+        if(!updatePerson.getGender().equals(originalPerson.getGender())){
+            returnValue = updateOnePerson(updatePerson.getId(),null,null,null,updatePerson.getGender(),null);
+        }
+        if(!updatePerson.getBirthDate().equals(originalPerson.getBirthDate())){
+            returnValue = updateOnePerson(updatePerson.getId(),null,null,null,null,updatePerson.getBirthDate());
+
+        }
+        return returnValue;
+    }
+
     int updateOnePerson(String personId,String userName,String password,String phoneNumber,String gender,Date birthDate){
-        //FMPerson personToChange = searchFromDatabase(personId);
+        //return -1 when update failed, 0 when succeed
         int flag = 0;
         String columnName,columnValue;
         if(userName!=null){
@@ -211,6 +234,7 @@ public class JdbcOperation {
             pS.close();
         }catch (SQLException e){
             e.printStackTrace();
+            return -1;
         }
 
 
@@ -218,14 +242,14 @@ public class JdbcOperation {
     }
 
     void translationFromFMPersonToTmp(FMPerson tmpPerson){
-        tmpId = tmpPerson.id;
-        tmpUserName = tmpPerson.userName;
-        tmpPswd = tmpPerson.pswd;
-        tmpNumberId = tmpPerson.numberId;
-        tmpPhoneNumber = tmpPerson.phoneNumber;
-        tmpGender = tmpPerson.gender;
-        tmpBirthDate = tmpPerson.birthDate;
-        tmpMoney = tmpPerson.money;
+        tmpId = tmpPerson.getId();
+        tmpUserName = tmpPerson.getUserName();
+        tmpPswd = tmpPerson.getPswd();
+        tmpNumberId = tmpPerson.getNumberId();
+        tmpPhoneNumber = tmpPerson.getPhoneNumber();
+        tmpGender = tmpPerson.getGender();
+        tmpBirthDate = tmpPerson.getBirthDate();
+        tmpMoney = tmpPerson.getMoney();
     }
 
     FMPerson translationFromTmpToFMPerson(String id,String userName,String pswd,String numberId,String phoneNumber,String gender,Date birthDate,Double money){
