@@ -83,14 +83,22 @@ public class ServerConnection {
                             serverExecute.personalHomepage(userId);
                             break;
                         case "Change Money":
-
-                            serverExecute.changeMoney();
-
+                            String returnStatus = null;
+                            returnStatus = serverExecute.changeMoney(userId);
+                            bufferedWriter.write(returnStatus);
+                            bufferedWriter.flush();
                             break;
                         case "Transfer Account":
-
+                            String transferStatus = null;
+                            transferStatus  = serverExecute.transferAccount(userId);
+                            bufferedWriter.write(transferStatus);
+                            bufferedWriter.flush();
                             break;
                         case "Change Personal Information":
+                            String changeInformationStatus = null;
+                            changeInformationStatus = serverExecute.changePersonalInformation();
+                            bufferedWriter.write(changeInformationStatus);
+                            bufferedWriter.flush();
 
                             break;
                         case "Root Account":
