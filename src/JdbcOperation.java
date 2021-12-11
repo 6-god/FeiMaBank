@@ -24,6 +24,7 @@ public class JdbcOperation {
     public boolean connectToMysql(String ipAddress, String userName, String password){
         String url = "jdbc:mysql://"+ipAddress+"/"+dataBaseName;
         try{
+            Class.forName("com.mysql.cj.jdbc.Driver");
             connection= DriverManager.getConnection(url,userName,password);
         }catch (Exception e){
             e.printStackTrace();
@@ -49,13 +50,13 @@ public class JdbcOperation {
                 translationFromFMPersonToTmp(personToAdd);   //store the statements into the tmpXXX for this class, from the arraylist, one by one
 
                 //ps.setString(1,tmpId);
-                ps.setString(2,tmpUserName);
-                ps.setString(3,tmpPswd);
-                ps.setString(4,tmpNumberId);
-                ps.setString(5,tmpPhoneNumber);
-                ps.setString(6,tmpGender);
-                ps.setDate(7, tmpBirthDate);
-                ps.setDouble(8,tmpMoney);
+                ps.setString(1,tmpUserName);
+                ps.setString(2,tmpPswd);
+                ps.setString(3,tmpNumberId);
+                ps.setString(4,tmpPhoneNumber);
+                ps.setString(5,tmpGender);
+                ps.setDate(6,tmpBirthDate);
+                ps.setDouble(7,tmpMoney);
 
                 ps.executeUpdate();
                 ps.close();
@@ -121,16 +122,16 @@ public class JdbcOperation {
         return tmpPerson;   //if query failed ,return null
     }
 
-    public String loginByUserName(String userName,String passWord){
+    public String loginByUserName(String userName,String passWord){ //return null when login failed
         String userId = null;
         FMPerson tmpPerson = null;
-        String sql = "SELECT * FROM " + tableName + " WHERE username= "+ userName;
+        String sql = "SELECT * FROM " + tableName + " WHERE username='"+ userName +"';";
         PreparedStatement pS;
         ResultSet rS;
         try{
             pS = (PreparedStatement) connection.prepareStatement(sql);
             rS = pS.executeQuery();
-            pS.close();
+
             tmpPerson = new FMPerson();
             while(rS.next()){
                 tmpPerson.setId(rS.getString("id"));
@@ -142,6 +143,7 @@ public class JdbcOperation {
                 tmpPerson.setBirthDate(rS.getDate("birth_date"));
                 tmpPerson.setMoney(rS.getDouble("money"));
             }
+            pS.close();
         }catch (SQLException e){
             e.printStackTrace();
         }
@@ -149,7 +151,7 @@ public class JdbcOperation {
             tmpPerson.printOnePerson();
         }
 
-        if(tmpPerson.getPswd() == passWord){
+        if(tmpPerson.getPswd().equals(passWord) ){
             userId = tmpPerson.getId();
         }
         return  userId;
@@ -239,6 +241,64 @@ public class JdbcOperation {
 
 
         return 0;
+    }
+
+
+    ArrayList<FMPerson> exportAllUsers(){
+        ArrayList<FMPerson> arrayListToBeReturned = null;
+        FMPerson tmpPerson = null;
+        String sql = "SELECT * FROM " + tableName + " WHERE username!='root';";
+        PreparedStatement pS;
+        ResultSet rS;
+        try{
+            pS = (PreparedStatement) connection.prepareStatement(sql);
+            rS = pS.executeQuery();
+
+            tmpPerson = new FMPerson();
+            while(rS.next()){
+                tmpPerson.setId(rS.getString("id"));
+                tmpPerson.setUserName(rS.getString("username"));
+                tmpPerson.setPswd(rS.getString("pswd"));
+                tmpPerson.setNumberId(rS.getString("number_id"));
+                tmpPerson.setPhoneNumber(rS.getString("phone_number"));
+                tmpPerson.setGender(rS.getString("gender"));
+                tmpPerson.setBirthDate(rS.getDate("birth_date"));
+                tmpPerson.setMoney(rS.getDouble("money"));
+                arrayListToBeReturned.add(tmpPerson);
+            }
+            pS.close();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        if(tmpPerson!=null){
+            tmpPerson.printOnePerson();
+        }
+
+        return arrayListToBeReturned;
+    }
+
+    ArrayList<Double> tableTotalCount(){    //return two values: total users, total money
+        Double totalMoney = 0.0;
+        Double totalUsers = 0.0;
+        String sql = "SELECT money FROM " + tableName + " WHERE username!='root';";
+        PreparedStatement pS;
+        ResultSet rS;
+        try{
+            pS = (PreparedStatement) connection.prepareStatement(sql);
+            rS = pS.executeQuery();
+            while(rS.next()){
+                totalMoney += rS.getDouble("money");
+                totalUsers += 1.0;
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            totalMoney = -1.0;
+            totalUsers = -1.0;
+        }
+        ArrayList<Double> doubleArrayList = new ArrayList<Double>();
+        doubleArrayList.add(totalUsers);
+        doubleArrayList.add(totalMoney);
+        return  doubleArrayList;
     }
 
     void translationFromFMPersonToTmp(FMPerson tmpPerson){

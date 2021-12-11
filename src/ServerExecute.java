@@ -87,7 +87,7 @@ public class ServerExecute {
 
     String changeMoney(String changeId) {
         Double changeAmount = 0.0;
-        try {    //get the
+        try {    //get the change money amount
             ServerSocket moneySocket = new ServerSocket(10005);
             Socket socket = moneySocket.accept();
             DataInputStream moneyChangeDIS = new DataInputStream(socket.getInputStream());
@@ -145,7 +145,7 @@ public class ServerExecute {
         String changeValueString = null;
         FMPerson personToBeChanged = jdbcOperation.searchFromDatabase(userId);
         try {
-            ServerSocket changeInformationSocket = new ServerSocket(10008);
+            ServerSocket changeInformationSocket = new ServerSocket(10007);
             Socket socket = changeInformationSocket.accept();
             BufferedReader changeInformationBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             changeColumn = changeInformationBufferedReader.readLine();
@@ -185,8 +185,64 @@ public class ServerExecute {
         return returnValue;
     }
 
-    void rootAccount() {
+    String rootAccount(String rootPswd) {   //try to log in root
+        String result = "failed";
+        String id = null;
+        id = jdbcOperation.loginByUserName("root", rootPswd);
+        if (id == null) {
 
+        } else {
+            result = "succeed";
+        }
+
+        return result;
+
+    }
+
+    void importXls() {
+        ArrayList<FMPerson> personToBeImported = null;
+        try {
+            ServerSocket personSocket = new ServerSocket(10008);
+            Socket socket = personSocket.accept();
+            DataInputStream personDIS = new DataInputStream(socket.getInputStream());
+            ObjectInputStream personOIS = new ObjectInputStream(personDIS);
+            personToBeImported = (ArrayList<FMPerson>) personOIS.readObject();
+            jdbcOperation.insertNewUser(personToBeImported);
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void exportXls() {
+        ArrayList<FMPerson> personToBeExported = jdbcOperation.exportAllUsers();
+        try {
+            ServerSocket personSocket = new ServerSocket(10009);
+            Socket socket = personSocket.accept();
+            DataOutputStream personDOS = new DataOutputStream(socket.getOutputStream());
+            ObjectOutputStream personOOS = new ObjectOutputStream(personDOS);
+            personOOS.writeObject(personToBeExported);
+            personOOS.flush();
+            personOOS.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    void generatePdfReport() {
+        try {
+            ServerSocket reportTransportSocket = new ServerSocket(10010);
+            Socket socket = reportTransportSocket.accept();
+            BufferedWriter reportDataWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            ArrayList<Double> doubleList = jdbcOperation.tableTotalCount();
+            reportDataWriter.write((int) Math.round(doubleList.get(0)));
+            reportDataWriter.write(doubleList.get(1).toString());
+            reportDataWriter.flush();
+            reportDataWriter.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
 

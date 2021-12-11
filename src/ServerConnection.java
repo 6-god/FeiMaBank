@@ -55,7 +55,7 @@ public class ServerConnection {
             while (true) {
                 String inputCommand = null;
                 try {
-                    inputCommand = bufferedReader.readLine();       //The inputCommand should be send with a "\n" in the end
+                    inputCommand = bufferedReader.readLine();       //The inputCommand should be sent with a "\n" in the end
                     switch (inputCommand) {
                         case "Login":
                             while (userId == null) {
@@ -90,20 +90,32 @@ public class ServerConnection {
                             break;
                         case "Transfer Account":
                             String transferStatus = null;
-                            transferStatus  = serverExecute.transferAccount(userId);
+                            transferStatus = serverExecute.transferAccount(userId);
                             bufferedWriter.write(transferStatus);
                             bufferedWriter.flush();
                             break;
                         case "Change Personal Information":
                             String changeInformationStatus = null;
-                            changeInformationStatus = serverExecute.changePersonalInformation();
+                            changeInformationStatus = serverExecute.changePersonalInformation(userId);
                             bufferedWriter.write(changeInformationStatus);
                             bufferedWriter.flush();
 
                             break;
                         case "Root Account":
-
+                            String loginResult = serverExecute.rootAccount(bufferedReader.readLine());
+                            bufferedWriter.write(loginResult);
+                            bufferedWriter.flush();
                             break;
+                        case "import xls":
+                            serverExecute.importXls();
+
+                        case "export xls":
+                            serverExecute.exportXls();
+
+                        case "generate pdf report":
+                            serverExecute.generatePdfReport();
+
+                        default:
 
                     }
 

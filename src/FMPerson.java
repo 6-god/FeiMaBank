@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.sql.Date;
 
-public class FMPerson {
+public class FMPerson implements Serializable {
     private String id, userName, pswd, numberId, phoneNumber, gender;
     private double money;
     private Date birthDate;
