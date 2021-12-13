@@ -230,16 +230,23 @@ public class ServerExecute {
 
     }
 
-    void generatePdfReport() {
+    void generatePdfReport() {  //firstly send the total users, then send total money by String
         try {
             ServerSocket reportTransportSocket = new ServerSocket(10010);
             Socket socket = reportTransportSocket.accept();
-            BufferedWriter reportDataWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
+            DataOutputStream reportDOS = new DataOutputStream(socket.getOutputStream());
+            ObjectOutputStream reportOOS  = new ObjectOutputStream(reportDOS);
             ArrayList<Double> doubleList = jdbcOperation.tableTotalCount();
-            reportDataWriter.write((int) Math.round(doubleList.get(0)));
-            reportDataWriter.write(doubleList.get(1).toString());
-            reportDataWriter.flush();
-            reportDataWriter.close();
+
+            reportOOS.writeObject(doubleList);
+            reportOOS.close();
+
+//            BufferedWriter reportDataWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+//            reportDataWriter.write((int) Math.round(doubleList.get(0)));
+//            reportDataWriter.write(doubleList.get(1).toString());
+//            reportDataWriter.flush();
+//            reportDataWriter.close();
         }catch (IOException e){
             e.printStackTrace();
         }
