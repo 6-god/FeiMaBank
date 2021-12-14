@@ -13,7 +13,7 @@ public class JdbcOperation {
     Connection connection;
     SimpleDateFormat sDF = new SimpleDateFormat("yyyy-MM-dd");
     JdbcOperation(){
-        connectToMysql("39.99.61.152","root","Passwordsql1");
+        connectToMysql("localhost","root","Passwordsql1");
     }
     JdbcOperation(String ipAddress,String userName,String password){
         connectToMysql(ipAddress,userName,password);

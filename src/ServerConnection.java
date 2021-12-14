@@ -36,7 +36,7 @@ public class ServerConnection {
         BufferedWriter bufferedWriter = null;
         String userId = null;
         ServerExecute serverExecute = null;
-
+        Boolean hasLeave = false;
         ServerThread(Socket socket) {
             mainSocket = socket;
             try {
@@ -52,7 +52,7 @@ public class ServerConnection {
 
         @Override
         public void run() {
-            while (true) {
+            while (!hasLeave) {
                 String inputCommand = null;
                 try {
                     inputCommand = bufferedReader.readLine();       //The inputCommand should be sent with a "\n" in the end
@@ -122,6 +122,7 @@ public class ServerConnection {
 
                 } catch (IOException e) {
                     System.out.println(mainSocket.getInetAddress() + ": Leave");
+                    hasLeave = true;
                 }
             }
         }
