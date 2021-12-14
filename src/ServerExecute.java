@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.sql.Date;
 import java.util.ArrayList;
 
-public class ServerExecute {
+public class ServerExecute {        //run all the JDBC works and communicate with Client
     private JdbcOperation jdbcOperation = new JdbcOperation();
     //    String clientAddress;
     private InetAddress clientAddress;
@@ -14,7 +14,7 @@ public class ServerExecute {
         clientAddress = ipAddress;
     }
 
-    String login() {        //try to login
+    String login() {        //try to log in
         String userId = null;
         String userName;
         String password;
@@ -31,7 +31,7 @@ public class ServerExecute {
         return userId;
     }
 
-    String register() {
+    String register() {     //try to register
         String userId = null;
         String userName = null, pswd = null;
         int flag = -2;
