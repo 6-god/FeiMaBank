@@ -1,13 +1,14 @@
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 //import java.util.Scanner;
 
 public class JdbcOperation {
     String tmpId,tmpUserName,tmpPswd,tmpNumberId,tmpPhoneNumber,tmpGender;
     String dataBaseName = "FMBANK";
     String tableName = "Personal_Data";
-    Date tmpBirthDate;
+    java.sql.Date tmpBirthDate;
     String loginId;
     double tmpMoney;
     Connection connection;
@@ -36,6 +37,7 @@ public class JdbcOperation {
     public int insertNewUser(ArrayList<FMPerson> fmPersonArrayList)  {  //new User || import from excel
         int total = fmPersonArrayList.size();
         String sql = "INSERT INTO "+tableName +" (username,pswd,number_id,phone_number,gender,birth_date,money) values (?,?,?,?,?,?,?)";
+        System.out.println("sql:"+sql);
         PreparedStatement ps = null;
         try{
             ps = (PreparedStatement) connection.prepareStatement(sql);
@@ -59,16 +61,20 @@ public class JdbcOperation {
                 ps.setDouble(7,tmpMoney);
 
                 ps.executeUpdate();
-                ps.close();
+                
 
 
             } catch (SQLException sqlException){
                 sqlException.printStackTrace();
-                return -1;
+                //return -1;
             }
+            
 
-
-
+        }
+        try{
+            ps.close();
+        } catch( Exception e){
+            e.printStackTrace();
         }
         return 0;
     }
@@ -96,12 +102,13 @@ public class JdbcOperation {
     public FMPerson searchFromDatabase(String idToSearch){
         FMPerson tmpPerson = null;
         String sql = "SELECT * FROM " + tableName + " WHERE id= "+ idToSearch;
+        System.out.println("sql:"+sql);
         PreparedStatement pS;
         ResultSet rS;
         try{
             pS = (PreparedStatement) connection.prepareStatement(sql);
             rS = pS.executeQuery();
-            pS.close();
+            
             tmpPerson = new FMPerson();
             while(rS.next()){
                 tmpPerson.setId(rS.getString("id"));
@@ -113,6 +120,38 @@ public class JdbcOperation {
                 tmpPerson.setBirthDate(rS.getDate("birth_date"));
                 tmpPerson.setMoney(rS.getDouble("money"));
             }
+            pS.close();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        if(tmpPerson!=null){
+            tmpPerson.printOnePerson();
+        }
+        return tmpPerson;   //if query failed ,return null
+    }
+
+    public FMPerson searchFromDatabaseByUserName(String nameToSearch){
+        FMPerson tmpPerson = null;
+        String sql = "SELECT * FROM " + tableName + " WHERE username= '"+ nameToSearch + "';";
+        System.out.println("sql:"+sql);
+        PreparedStatement pS;
+        ResultSet rS;
+        try{
+            pS = (PreparedStatement) connection.prepareStatement(sql);
+            rS = pS.executeQuery();
+            
+            tmpPerson = new FMPerson();
+            while(rS.next()){
+                tmpPerson.setId(rS.getString("id"));
+                tmpPerson.setUserName(rS.getString("username"));
+                tmpPerson.setPswd(rS.getString("pswd"));
+                tmpPerson.setNumberId(rS.getString("number_id"));
+                tmpPerson.setPhoneNumber(rS.getString("phone_number"));
+                tmpPerson.setGender(rS.getString("gender"));
+                tmpPerson.setBirthDate(rS.getDate("birth_date"));
+                tmpPerson.setMoney(rS.getDouble("money"));
+            }
+            pS.close();
         }catch (SQLException e){
             e.printStackTrace();
         }
@@ -126,6 +165,7 @@ public class JdbcOperation {
         String userId = null;
         FMPerson tmpPerson = null;
         String sql = "SELECT * FROM " + tableName + " WHERE username='"+ userName +"';";
+        System.out.println("sql:"+sql);
         PreparedStatement pS;
         ResultSet rS;
         try{
@@ -147,13 +187,15 @@ public class JdbcOperation {
         }catch (SQLException e){
             e.printStackTrace();
         }
-        if(tmpPerson!=null){
-            tmpPerson.printOnePerson();
-        }
 
-        if(tmpPerson.getPswd().equals(passWord) ){
-            userId = tmpPerson.getId();
+        tmpPerson.printOnePerson();
+
+        if(tmpPerson.getPswd()!=null){
+            if(tmpPerson.getPswd().equals(passWord) ){
+                userId = tmpPerson.getId();
+            }
         }
+        
         return  userId;
     }
 
@@ -165,11 +207,12 @@ public class JdbcOperation {
         try{
             pS = (PreparedStatement) connection.prepareStatement(sql);
             rS = pS.executeQuery();
-            pS.close();
+            
             result = rS.getString("username");
             if(result != null){
                 return true;
             }
+            pS.close();
         }catch (SQLException e){
             e.printStackTrace();
         }
@@ -181,25 +224,27 @@ public class JdbcOperation {
         FMPerson originalPerson = searchFromDatabase(updatePerson.getId());
         int returnValue = -1;
         if(!updatePerson.getUserName().equals(originalPerson.getUserName())){
-            returnValue = updateOnePerson(updatePerson.getId(),updatePerson.getUserName(),null,null,null,null);
+            returnValue = updateOnePerson(updatePerson.getId(),updatePerson.getUserName(),null,null,null,null,null);
         }
         if(!updatePerson.getPswd().equals(originalPerson.getPswd())){
-            returnValue = updateOnePerson(updatePerson.getId(),null,updatePerson.getPswd(),null,null,null);
+            returnValue = updateOnePerson(updatePerson.getId(),null,updatePerson.getPswd(),null,null,null,null);
         }
         if(!updatePerson.getPhoneNumber().equals(originalPerson.getPhoneNumber())){
-            returnValue = updateOnePerson(updatePerson.getId(),null,null,updatePerson.getPhoneNumber(),null,null);
+            returnValue = updateOnePerson(updatePerson.getId(),null,null,updatePerson.getPhoneNumber(),null,null,null);
         }
         if(!updatePerson.getGender().equals(originalPerson.getGender())){
-            returnValue = updateOnePerson(updatePerson.getId(),null,null,null,updatePerson.getGender(),null);
+            returnValue = updateOnePerson(updatePerson.getId(),null,null,null,updatePerson.getGender(),null,null);
         }
         if(!updatePerson.getBirthDate().equals(originalPerson.getBirthDate())){
-            returnValue = updateOnePerson(updatePerson.getId(),null,null,null,null,updatePerson.getBirthDate());
-
+            returnValue = updateOnePerson(updatePerson.getId(),null,null,null,null,updatePerson.getBirthDate(),null);
+        } 
+        if(updatePerson.getMoney() != originalPerson.getMoney()){
+            returnValue = updateOnePerson(updatePerson.getId(),null,null,null,null,null,updatePerson.getMoney());
         }
         return returnValue;
     }
 
-    int updateOnePerson(String personId,String userName,String password,String phoneNumber,String gender,Date birthDate){
+    int updateOnePerson(String personId,String userName,String password,String phoneNumber,String gender,Date birthDate,Double money){
         //return -1 when update failed, 0 when succeed
         int flag = 0;
         String columnName,columnValue;
@@ -224,12 +269,16 @@ public class JdbcOperation {
             columnName ="birth_date";
             columnValue = sDF.format(birthDate);
             //personToChange.setBirthDate(birthDate);
+        }else if(money!=null){
+            columnName ="Money";
+            columnValue = money.toString();
         }else{
             System.out.println("input error: all null");
             return -1;
         }
 
         String sql = "UPDATE "+ tableName+" SET "+columnName+"='" + columnValue + "' WHERE id='" + personId + "'";
+        System.out.println("sql:"+sql);
         try{
             PreparedStatement pS = (PreparedStatement) connection.prepareStatement(sql);
             flag = pS.executeUpdate();
@@ -245,17 +294,19 @@ public class JdbcOperation {
 
 
     ArrayList<FMPerson> exportAllUsers(){
-        ArrayList<FMPerson> arrayListToBeReturned = null;
+        ArrayList<FMPerson> arrayListToBeReturned = new ArrayList<FMPerson>();
         FMPerson tmpPerson = null;
         String sql = "SELECT * FROM " + tableName + " WHERE username!='root';";
+        System.out.println("sql:"+sql);
         PreparedStatement pS;
         ResultSet rS;
         try{
             pS = (PreparedStatement) connection.prepareStatement(sql);
             rS = pS.executeQuery();
 
-            tmpPerson = new FMPerson();
+            
             while(rS.next()){
+                tmpPerson = new FMPerson();
                 tmpPerson.setId(rS.getString("id"));
                 tmpPerson.setUserName(rS.getString("username"));
                 tmpPerson.setPswd(rS.getString("pswd"));
@@ -265,22 +316,34 @@ public class JdbcOperation {
                 tmpPerson.setBirthDate(rS.getDate("birth_date"));
                 tmpPerson.setMoney(rS.getDouble("money"));
                 arrayListToBeReturned.add(tmpPerson);
+                if(tmpPerson!=null){
+                    tmpPerson.printOnePerson();
+                }
             }
             pS.close();
         }catch (SQLException e){
             e.printStackTrace();
         }
-        if(tmpPerson!=null){
-            tmpPerson.printOnePerson();
-        }
+        
 
         return arrayListToBeReturned;
+    }
+
+    void closeAccountForOver70(){
+        ArrayList<FMPerson> fmListTmp = this.exportAllUsers();
+        int total = fmListTmp.size();
+        for( int i = 0 ; i < total ; i++){
+            if(new Date().getTime() - fmListTmp.get(i).getBirthDate().getTime() > 2207520000000L){
+                deleteUserFromDatabase(fmListTmp.get(i).getId());
+            }
+        }
     }
 
     ArrayList<Double> tableTotalCount(){    //return two values: total users, total money
         Double totalMoney = 0.0;
         Double totalUsers = 0.0;
         String sql = "SELECT money FROM " + tableName + " WHERE username!='root';";
+        System.out.println("sql:"+sql);
         PreparedStatement pS;
         ResultSet rS;
         try{
@@ -290,6 +353,7 @@ public class JdbcOperation {
                 totalMoney += rS.getDouble("money");
                 totalUsers += 1.0;
             }
+            pS.close();
         }catch (SQLException e){
             e.printStackTrace();
             totalMoney = -1.0;
@@ -298,6 +362,7 @@ public class JdbcOperation {
         ArrayList<Double> doubleArrayList = new ArrayList<Double>();
         doubleArrayList.add(totalUsers);
         doubleArrayList.add(totalMoney);
+        
         return  doubleArrayList;
     }
 
@@ -311,12 +376,12 @@ public class JdbcOperation {
         tmpBirthDate = tmpPerson.getBirthDate();
         tmpMoney = tmpPerson.getMoney();
     }
-
+    /*
     FMPerson translationFromTmpToFMPerson(String id,String userName,String pswd,String numberId,String phoneNumber,String gender,Date birthDate,Double money){
         FMPerson person = new FMPerson(id,userName,pswd,numberId,phoneNumber,gender,birthDate,money);
         return person;
     }
-
+    */
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }

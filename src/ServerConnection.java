@@ -56,70 +56,62 @@ public class ServerConnection {
                 String inputCommand = null;
                 try {
                     inputCommand = bufferedReader.readLine();       //The inputCommand should be sent with a "\n" in the end
-                    switch (inputCommand) {
-                        case "Login":
-                            while (userId == null) {
-                                userId = serverExecute.login();      //if succeeded, userId will be correct, or it will return null.
-                                if (userId == null) {
-                                    bufferedWriter.write("login failed\n");
-                                } else {
-                                    bufferedWriter.write("login succeed\n");
-                                }
-                                bufferedWriter.flush();
-                            }
-                            break;
-                        case "Register":
-                            while (userId == null || userId.equals("name problem") || userId.equals("password problem") || userId.equals("else problem")) {
-                                userId = serverExecute.register();  //if succeeded, userId will be correct, or it will return error messages.
-                                if (userId.equals("name problem") || userId.equals("password problem") || userId.equals("else problem")) {
-                                    bufferedWriter.write(userId + "\n");    //send error message to client
-                                } else {
-                                    bufferedWriter.write("register succeed\n");
-                                }
-                                bufferedWriter.flush();
-                            }
-                            break;
-                        case "Personal Homepage":
-                            serverExecute.personalHomepage(userId);
-                            break;
-                        case "Change Money":
-                            String returnStatus = null;
-                            returnStatus = serverExecute.changeMoney(userId);
-                            bufferedWriter.write(returnStatus);
-                            bufferedWriter.flush();
-                            break;
-                        case "Transfer Account":
-                            String transferStatus = null;
-                            transferStatus = serverExecute.transferAccount(userId);
-                            bufferedWriter.write(transferStatus);
-                            bufferedWriter.flush();
-                            break;
-                        case "Change Personal Information":
-                            String changeInformationStatus = null;
-                            changeInformationStatus = serverExecute.changePersonalInformation(userId);
-                            bufferedWriter.write(changeInformationStatus);
-                            bufferedWriter.flush();
-
-                            break;
-                        case "Root Account":
-                            String loginResult = serverExecute.rootAccount(bufferedReader.readLine());
-                            bufferedWriter.write(loginResult);
-                            bufferedWriter.flush();
-                            break;
-                        case "import xls":
-                            serverExecute.importXls();
-
-                        case "export xls":
-                            serverExecute.exportXls();
-
-                        case "generate pdf report":
-                            serverExecute.generatePdfReport();
-
-                        default:
-
+                    System.out.printf("from client:%s\n",inputCommand);
+                    if ("Login".equals(inputCommand)) {//while (userId == null) {
+                        userId = serverExecute.login();      //if succeeded, userId will be correct, or it will return null.
+                        if (userId == null) {
+                            bufferedWriter.write("login failed\n");
+                        } else {
+                            bufferedWriter.write("login succeed\n");
+                        }
+                        bufferedWriter.flush();
+                        System.out.printf("%s\n", userId);
+                        //}
+                    } else if ("Register".equals(inputCommand)) {//while (userId == null || userId.equals("name problem") || userId.equals("password problem") || userId.equals("else problem")) {
+                        userId = serverExecute.register();  //if succeeded, userId will be correct, or it will return error messages.
+                        if (userId.equals("name problem") || userId.equals("password problem") || userId.equals("else problem")) {
+                            bufferedWriter.write(userId + "\n");    //send error message to client
+                        } else {
+                            bufferedWriter.write("register succeed\n");
+                        }
+                        bufferedWriter.flush();
+                        //}
+                    } else if ("Personal Homepage".equals(inputCommand)) {
+                        serverExecute.personalHomepage(userId);
+                    } else if ("Change Money".equals(inputCommand)) {
+                        String returnStatus = null;
+                        returnStatus = serverExecute.changeMoney(userId);
+                        bufferedWriter.write(returnStatus + "\n");
+                        bufferedWriter.flush();
+                    } else if ("Transfer Account".equals(inputCommand)) {
+                        String transferStatus = null;
+                        transferStatus = serverExecute.transferAccount(userId);
+                        System.out.println("result:"+transferStatus);
+                        bufferedWriter.write(transferStatus + "\n");
+                        bufferedWriter.flush();
+                        System.out.println("flushed");
+                    } else if ("Change Personal Information".equals(inputCommand)) {
+                        String changeInformationStatus = null;
+                        String columnName = bufferedReader.readLine();
+                        changeInformationStatus = serverExecute.changePersonalInformation(userId,columnName);
+                        bufferedWriter.write(changeInformationStatus + "\n");
+                        bufferedWriter.flush();
+                    } else if ("Root Account".equals(inputCommand)) {
+                        String loginResult = serverExecute.rootAccount(bufferedReader.readLine());
+                        bufferedWriter.write(loginResult + "\n");
+                        bufferedWriter.flush();
+                    } else if ("import xls".equals(inputCommand)) {
+                        serverExecute.importXls();
+                    } else if ("export xls".equals(inputCommand)) {
+                        serverExecute.exportXls();
+                    } else if ("generate pdf report".equals(inputCommand)) {
+                        serverExecute.generatePdfReport();
+                    } else if ("close account over 70".equals(inputCommand)) {
+                        serverExecute.closeAccount();
                     }
-
-
+                    else {
+                        System.out.println("server received"+inputCommand);
+                    }
                 } catch (IOException e) {
                     System.out.println(mainSocket.getInetAddress() + ": Leave");
                     hasLeave = true;

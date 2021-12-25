@@ -1,10 +1,11 @@
 import java.io.Serializable;
 import java.sql.Date;
+import java.text.SimpleDateFormat;
 
-public class FMPerson implements Serializable {
+public class FMPerson implements Serializable {     //one FM person class
     private String id, userName, pswd, numberId, phoneNumber, gender;
     private double money;
-    private Date birthDate;
+    private java.sql.Date birthDate;
 
     FMPerson() {
     }
@@ -69,8 +70,17 @@ public class FMPerson implements Serializable {
         return gender;
     }
 
-    public void setBirthDate(Date birthDate) {
-        this.birthDate = birthDate;
+    public void setBirthDate(java.util.Date birthDate) {
+        if(birthDate == null){
+            SimpleDateFormat sDF = new SimpleDateFormat("yyyy-MM-dd");
+            try{
+                birthDate = new java.sql.Date( sDF.parse("2000-01-01").getTime());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        this.birthDate = new java.sql.Date(birthDate.getTime());
+
     }
 
     public void setGender(String gender) {
